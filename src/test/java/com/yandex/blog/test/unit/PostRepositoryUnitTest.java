@@ -26,7 +26,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class JdbcNativePostRepositoryUnitTest {
+public class PostRepositoryUnitTest {
 
     @Mock
     private JdbcTemplate jdbcTemplate;
