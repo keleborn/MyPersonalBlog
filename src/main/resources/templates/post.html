@@ -5,6 +5,9 @@
 </head>
 <body>
     <h1 th:text="${post.title}">Title</h1>
+    <div th:if="${post.imageUrl != null}">
+        <img th:src="@{'/images/' + ${post.imageUrl}}" alt="Картинка"/>
+    </div>
     <div th:each="paragraph : ${paragraphs}">
         <pre th:text="${paragraph}"></pre>
     </div>

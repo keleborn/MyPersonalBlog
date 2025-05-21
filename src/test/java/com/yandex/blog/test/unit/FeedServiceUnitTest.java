@@ -36,8 +36,8 @@ public class FeedServiceUnitTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        post1 = new Post(1L, "title1", "desc1", "content1", 0);
-        post2 = new Post(2L, "title2", "desc2", "content2", 0);
+        post1 = new Post(1L, "title1", "desc1", "content1", 0, null);
+        post2 = new Post(2L, "title2", "desc2", "content2", 0, null);
     }
 
     @Test

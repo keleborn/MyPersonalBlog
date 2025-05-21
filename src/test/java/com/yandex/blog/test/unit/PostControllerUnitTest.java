@@ -37,7 +37,7 @@ public class PostControllerUnitTest {
 
     @Test
     void getPost_shouldAddPostAndReturnView() {
-        Post post = new Post(1L, "title1", "shortDesc1", "content1", 0);
+        Post post = new Post(1L, "title1", "shortDesc1", "content1", 0, null);
 
         when(postService.findById(1L)).thenReturn(post);
         String viewName = postController.getPost(1L, model);
@@ -57,12 +57,12 @@ public class PostControllerUnitTest {
 
     @Test
     void createPost_shouldSavePostAndRedirect() {
-        Post post = new Post(1L, "title1", "shortDesc1", "content1", 0);
+        Post post = new Post(1L, "title1", "shortDesc1", "content1", 0, null);
 
-        String viewName = postController.createPost(post, "tag");
+        String viewName = postController.createPost(post, null, "tag");
 
         assertEquals("redirect:/feed", viewName);
-        verify(postService, times(1)).save(post);
+        verify(postService, times(1)).save(post, null);
     }
 
     @Test
@@ -75,7 +75,7 @@ public class PostControllerUnitTest {
 
     @Test
     void showEditPostForm_shouldReturnView() {
-        Post post = new Post(1L, "title1", "shortDesc1", "content1", 0);
+        Post post = new Post(1L, "title1", "shortDesc1", "content1", 0, null);
         when(postService.findById(1L)).thenReturn(post);
 
         String viewName = postController.showEditPostForm(1L, model);
@@ -87,16 +87,16 @@ public class PostControllerUnitTest {
 
     @Test
     void editPost_ShouldUpdatePostAndRedirect() {
-        Post post = new Post(1L, "title1", "shortDesc1", "content1", 0);
+        Post post = new Post(1L, "title1", "shortDesc1", "content1", 0, null);
 
-        String viewName = postController.editPost(1L, post, "tag");
+        String viewName = postController.editPost(1L, post, "tag", null, false);
         assertEquals("redirect:/post/1", viewName);
-        verify(postService, times(1)).update(post);
+        verify(postService, times(1)).update(post, null, false);
     }
 
     @Test
     void likePost_shouldIncrementLikesAndReturnView() {
-        Post post = new Post(1L, "title1", "shortDesc1", "content1", 0);
+        Post post = new Post(1L, "title1", "shortDesc1", "content1", 0, null);
 
         String viewName = postController.likePost(1L, post);
         assertEquals("redirect:/post/1", viewName);

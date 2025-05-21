@@ -2,10 +2,13 @@ package com.yandex.blog.test.integration;
 
 import com.yandex.blog.WebConfiguration;
 import com.yandex.blog.configuration.DataSourceConfiguration;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -13,8 +16,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import java.io.InputStream;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -32,6 +40,9 @@ public class PostControllerIntegrationTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Value("${image.upload.dir}")
+    private String uploadDir;
 
     private MockMvc mockMvc;
 
@@ -60,7 +71,10 @@ public class PostControllerIntegrationTest {
 
     @Test
     void createPost_shouldAddPostToDatabaseAndRedirect() throws Exception {
-        mockMvc.perform(post("/post/new")
+        InputStream is = getClass().getClassLoader().getResourceAsStream("images/test.png");
+        MockMultipartFile file = new MockMultipartFile("image", "test.png", "image/png", is);
+        mockMvc.perform(multipart("/post/new")
+                        .file(file)
                         .param("title","Title2")
                         .param("shortDescription","ShortDesc2")
                         .param("content","Content2"))
@@ -112,5 +126,20 @@ public class PostControllerIntegrationTest {
         mockMvc.perform(post("/post/like/1"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(view().name("redirect:/post/1"));
+    }
+
+    @AfterEach
+    public void cleanUpUploadedImages() throws Exception {
+        Path dir = Paths.get(uploadDir);
+        if (Files.exists(dir)) {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
+                for (Path file : stream) {
+                    if (Files.isRegularFile(file) && file.getFileName().toString().endsWith("_test.png")) {
+                        Files.delete(file);
+                    }
+                }
+            }
+
+        }
     }
 }

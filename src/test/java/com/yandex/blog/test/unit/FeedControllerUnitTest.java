@@ -38,8 +38,8 @@ public class FeedControllerUnitTest {
     @Test
     public void getPosts_shouldAddPostsAndReturnView() {
         List<Post> posts = new ArrayList<>();
-        posts.add(new Post(1L, "title1", "shortDesc1", "content1", 0));
-        posts.add(new Post(2L, "title2", "shortDesc2", "content2", 0));
+        posts.add(new Post(1L, "title1", "shortDesc1", "content1", 0, null));
+        posts.add(new Post(2L, "title2", "shortDesc2", "content2", 0, null));
 
         when(feedService.countPosts(eq(List.of("tag")))).thenReturn(posts.size());
         when(feedService.findAllByTagsWithPagination(eq(5), eq(1), eq(List.of("tag")) )).thenReturn(posts);

@@ -3,6 +3,7 @@ create table if not exists posts(
     title varchar(256) not null,
     shortDescription varchar(256) not null,
     content varchar(256) not null,
+    imageUrl varchar(256),
     likes int DEFAULT 0
 );
 

@@ -11,7 +11,7 @@ import java.util.List;
 
 @Repository
 public class JdbcNativePostRepository implements PostRepository {
-    private final static String SELECT_TEXT_FIELD_FROM_POSTS = "select id, title, shortDescription, content, likes from posts p ";
+    private final static String SELECT_TEXT_FIELD_FROM_POSTS = "select id, title, shortDescription, content, likes, imageUrl from posts p ";
     public static final String LEFT_JOIN_POST_TAG_LINKS = "left join post_tag_links pt on p.id = pt.post_id ";
 
     private final JdbcTemplate jdbcTemplate;
@@ -28,7 +28,8 @@ public class JdbcNativePostRepository implements PostRepository {
                         rs.getString("title"),
                         rs.getString("shortDescription"),
                         rs.getString("content"),
-                        rs.getInt("likes")
+                        rs.getInt("likes"),
+                        rs.getString("imageUrl")
                 )
         );
     }
@@ -50,21 +51,23 @@ public class JdbcNativePostRepository implements PostRepository {
                         rs.getString("title"),
                         rs.getString("shortDescription"),
                         rs.getString("content"),
-                        rs.getInt("likes")
+                        rs.getInt("likes"),
+                        rs.getString("imageUrl")
                 )
         );
     }
 
     @Override
     public Post findById(Long id) {
-        return jdbcTemplate.queryForObject("select id, title, shortDescription, content, likes from posts where id = ?",
+        return jdbcTemplate.queryForObject("select id, title, shortDescription, content, likes, imageUrl from posts where id = ?",
                 new Object[]{id},
                 (rs, rowNum) -> new Post(
                         rs.getLong("id"),
                         rs.getString("title"),
                         rs.getString("shortDescription"),
                         rs.getString("content"),
-                        rs.getInt("likes")
+                        rs.getInt("likes"),
+                        rs.getString("imageUrl")
                 )
         );
     }
@@ -85,12 +88,13 @@ public class JdbcNativePostRepository implements PostRepository {
     public void save(Post post) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connections -> {
-            PreparedStatement ps = connections.prepareStatement("insert into posts (title, content, shortDescription) values (?, ?, ?)",
+            PreparedStatement ps = connections.prepareStatement("insert into posts (title, content, shortDescription, imageUrl) values (?, ?, ?, ?)",
                     Statement.RETURN_GENERATED_KEYS);
 
             ps.setString(1, post.getTitle());
             ps.setString(2, post.getContent());
             ps.setString(3, post.getShortDescription());
+            ps.setString(4, post.getImageUrl());
             return ps;
         }, keyHolder);
         post.setId(keyHolder.getKey().longValue());
@@ -98,8 +102,8 @@ public class JdbcNativePostRepository implements PostRepository {
 
     @Override
     public void update(Post post) {
-        jdbcTemplate.update("update posts set title = ?, shortDescription = ?, content = ? where id = ?",
-                post.getTitle(), post.getShortDescription(), post.getContent(), post.getId());
+        jdbcTemplate.update("update posts set title = ?, shortDescription = ?, content = ?, imageUrl = ? where id = ?",
+                post.getTitle(), post.getShortDescription(), post.getContent(), post.getImageUrl(), post.getId());
     }
 
     @Override

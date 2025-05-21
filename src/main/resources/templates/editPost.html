@@ -5,7 +5,7 @@
 </head>
 <body>
     <h1>Редактировать пост</h1>
-    <form th:action="@{/post/edit/{id}(id=${post.id})}" th:object="${post}" method="post">
+    <form th:action="@{/post/edit/{id}(id=${post.id})}" th:object="${post}" method="post" enctype="multipart/form-data">
         <div>
             <label for="title">Заголовок:</label>
             <input type="text" id="title" th:field="*{title}" required>
@@ -21,6 +21,15 @@
         <div>
             <label for="tags">Теги:</label>
             <input type="text" id="tags" name="tags" th:field="*{tags}"/>
+        </div>
+        <div>
+            <label>Картинка:</label>
+            <input type="file" id="image" name="image">
+            <div th:if="${post.imageUrl != null}">
+                <p>Текущая картинка:</p>
+                <img th:src="@{'/images/' + ${post.imageUrl}}" alt="Картинка"/>
+                <label><input type="checkbox" name="deleteImage" value="true"/>Удалить</label>
+            </div>
         </div>
         <div>
             <button type="submit">Сохранить</button>

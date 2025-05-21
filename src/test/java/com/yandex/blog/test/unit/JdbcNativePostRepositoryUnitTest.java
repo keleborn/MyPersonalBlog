@@ -42,9 +42,9 @@ public class JdbcNativePostRepositoryUnitTest {
     @Test
     void findAll_shouldReturnAllPosts() {
         List<Post> posts = new ArrayList<>();
-        posts.add(new Post(1L, "title1", "desc1", "content1", 0));
-        posts.add(new Post(2L, "title2", "desc2", "content2", 0));
-        posts.add(new Post(3L, "title3", "desc3", "content3", 0));
+        posts.add(new Post(1L, "title1", "desc1", "content1", 0, null));
+        posts.add(new Post(2L, "title2", "desc2", "content2", 0, null));
+        posts.add(new Post(3L, "title3", "desc3", "content3", 0, null));
 
         when(jdbcTemplate.query(anyString(), any(RowMapper.class))).thenReturn(posts);
 
@@ -57,11 +57,11 @@ public class JdbcNativePostRepositoryUnitTest {
     @Test
     void findAllWithPagination_shouldReturnLimitedNumberOfPostsWithOffset() {
         List<Post> posts = new ArrayList<>();
-        posts.add(new Post(2L, "title2", "desc2", "content2", 0));
-        posts.add(new Post(3L, "title3", "desc3", "content3", 0));
-        posts.add(new Post(4L, "title4", "desc4", "content4", 0));
-        posts.add(new Post(5L, "title5", "desc5", "content5", 0));
-        posts.add(new Post(6L, "title6", "desc6", "content6", 0));
+        posts.add(new Post(2L, "title2", "desc2", "content2", 0, null));
+        posts.add(new Post(3L, "title3", "desc3", "content3", 0, null));
+        posts.add(new Post(4L, "title4", "desc4", "content4", 0, null));
+        posts.add(new Post(5L, "title5", "desc5", "content5", 0, null));
+        posts.add(new Post(6L, "title6", "desc6", "content6", 0, null));
 
         when(jdbcTemplate.query(anyString(), any(RowMapper.class))).thenReturn(posts);
 
@@ -73,7 +73,7 @@ public class JdbcNativePostRepositoryUnitTest {
 
     @Test
     void findById_shouldReturnPost() {
-        Post post = new Post(1L, "title1", "desc1", "content1", 0);
+        Post post = new Post(1L, "title1", "desc1", "content1", 0, null);
 
         when(jdbcTemplate.queryForObject(anyString(), any(Object[].class), any(RowMapper.class))).thenReturn(post);
 
@@ -86,7 +86,7 @@ public class JdbcNativePostRepositoryUnitTest {
 
     @Test
     void save_shouldExecuteInsertQueryAndSetPostId() {
-        Post post = new Post(1L, "title1", "desc1", "content1", 0);
+        Post post = new Post(1L, "title1", "desc1", "content1", 0, null);
 
         when(jdbcTemplate.update(any(PreparedStatementCreator.class), any(KeyHolder.class))).thenAnswer(
                 invocationOnMock -> {
@@ -133,18 +133,18 @@ public class JdbcNativePostRepositoryUnitTest {
 
     @Test
     void update_shouldExecuteUpdateQuery() {
-        Post post = new Post(1L, "title1", "desc1", "content1", 0);
+        Post post = new Post(1L, "title1", "desc1", "content1", 0, null);
         when(jdbcTemplate.update(anyString(), any(Object[].class))).thenReturn(1);
 
         jdbcNativePostRepository.update(post);
 
-        verify(jdbcTemplate, times(1)).update(eq("update posts set title = ?, shortDescription = ?, content = ? where id = ?"),
-                eq(post.getTitle()), eq(post.getShortDescription()), eq(post.getContent()), eq(post.getId()));
+        verify(jdbcTemplate, times(1)).update(eq("update posts set title = ?, shortDescription = ?, content = ?, imageUrl = ? where id = ?"),
+                eq(post.getTitle()), eq(post.getShortDescription()), eq(post.getContent()), eq(post.getImageUrl()), eq(post.getId()));
     }
 
     @Test
     void incrementLikes_shouldExecuteUpdateQuery() {
-        Post post = new Post(1L, "title1", "desc1", "content1", 0);
+        Post post = new Post(1L, "title1", "desc1", "content1", 0, null);
         when(jdbcTemplate.update(anyString(), any(Object[].class))).thenReturn(1);
 
         jdbcNativePostRepository.incrementLikes(post);

@@ -10,14 +10,13 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class PostServiceUnitTest {
 
@@ -37,7 +36,7 @@ public class PostServiceUnitTest {
 
     @Test
     void findById_shouldReturnPostWhenExists() {
-        Post post = new Post(1L, "title1", "desc1", "content1", 0);
+        Post post = new Post(1L, "title1", "desc1", "content1", 0, null);
 
         when(postRepository.findById(1L)).thenReturn(post);
         Post result = postService.findById(1L);
@@ -62,8 +61,11 @@ public class PostServiceUnitTest {
 
     @Test
     void save_shouldSavePost() {
-        Post post = new Post(1L, "title1", "desc1", "content1", 0);
-        postService.save(post);
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.isEmpty()).thenReturn(true);
+        Post post = new Post(1L, "title1", "desc1", "content1", 0, null);
+
+        postService.save(post, file);
         verify(postRepository, times(1)).save(post);
     }
 
@@ -86,14 +88,19 @@ public class PostServiceUnitTest {
 
     @Test
     void update_shouldUpdatePost() {
-        Post post = new Post(1L, "title1", "desc1", "content1", 0);
-        postService.update(post);
+        Post post = new Post(1L, "title1", "desc1", "content1", 0, null);
+
+        when(postRepository.findById(1L)).thenReturn(post);
+
+        postService.update(post, null, false);
+
         verify(postRepository, times(1)).update(post);
+        verify(postRepository, times(1)).findById(1L);
     }
 
     @Test
     void incrementLikes_shouldIncrementLikes() {
-        Post post = new Post(1L, "title1", "desc1", "content1", 0);
+        Post post = new Post(1L, "title1", "desc1", "content1", 0, null);
         postService.incrementLikes(post);
         verify(postRepository, times(1)).incrementLikes(post);
     }

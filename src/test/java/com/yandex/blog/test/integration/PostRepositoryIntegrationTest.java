@@ -116,7 +116,7 @@ public class PostRepositoryIntegrationTest {
 
     @Test
     void update_shouldUpdatePost() {
-        Post post = new Post(2L, "Title2Updated", "ShorDesc2Updated", "Content2Updated", 0);
+        Post post = new Post(2L, "Title2Updated", "ShorDesc2Updated", "Content2Updated", 0, "testPathUrl");
         postRepository.update(post);
 
         Post updatedPost = postRepository.findById(2L);
@@ -124,6 +124,7 @@ public class PostRepositoryIntegrationTest {
         assertEquals("Title2Updated", updatedPost.getTitle());
         assertEquals("ShorDesc2Updated", updatedPost.getShortDescription());
         assertEquals("Content2Updated", updatedPost.getContent());
+        assertEquals("testPathUrl", updatedPost.getImageUrl());
     }
 
     @Test

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -40,8 +41,10 @@ public class PostController {
     }
 
     @PostMapping("/new")
-    public String createPost(@ModelAttribute("post") Post post, @RequestParam(name = "tags", required = false) String tags) {
-        postService.save(post);
+    public String createPost(@ModelAttribute("post") Post post,
+                             @RequestParam(name = "image", required = false) MultipartFile image,
+                             @RequestParam(name = "tags", required = false) String tags) {
+        postService.save(post, image);
         postService.saveTags(post.getId(), parseTags(tags));
 
         return "redirect:/feed";
@@ -61,10 +64,14 @@ public class PostController {
     }
 
     @PostMapping("/edit/{id}")
-    public String editPost(@PathVariable("id") Long id, @ModelAttribute("post") Post post, @RequestParam(name = "tags", required = false) String tags) {
+    public String editPost(@PathVariable("id") Long id,
+                           @ModelAttribute("post") Post post,
+                           @RequestParam(name = "tags", required = false) String tags,
+                           @RequestParam(value = "image", required = false) MultipartFile image,
+                           @RequestParam(value = "deleteImage", required = false, defaultValue = "false") boolean deleteImage) {
         post.setId(id);
         post.setTags(parseTags(tags));
-        postService.update(post);
+        postService.update(post, image, deleteImage);
         postService.saveTags(post.getId(), post.getTags());
         return "redirect:/post/" + id;
     }

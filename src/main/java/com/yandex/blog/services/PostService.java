@@ -3,10 +3,17 @@ package com.yandex.blog.services;
 import com.yandex.blog.model.Post;
 import com.yandex.blog.repository.PostRepository;
 import com.yandex.blog.repository.TagRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static com.yandex.blog.utils.PostUtils.splitBySentences;
 import static com.yandex.blog.utils.PostUtils.splitBySymbol;
@@ -15,6 +22,9 @@ import static com.yandex.blog.utils.PostUtils.splitBySymbol;
 public class PostService {
     private final PostRepository postRepository;
     private final TagRepository tagRepository;
+
+    @Value("${image.upload.dir}")
+    private String imagesPath;
 
     public PostService(PostRepository postRepository, TagRepository tagRepository) {
         this.postRepository = postRepository;
@@ -29,11 +39,32 @@ public class PostService {
         return post;
     }
 
-    public void save(Post post) {
+    public void save(Post post, MultipartFile image) {
+        if (image != null && !image.isEmpty()) {
+            String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
+            Path path = Paths.get(imagesPath, fileName);
+            try {
+                Files.createDirectories(path.getParent());
+                Files.write(path, image.getBytes());
+                post.setImageUrl(fileName);
+            } catch (IOException e) {
+                throw new RuntimeException("Ошибка при сохранени", e);
+            }
+        }
         postRepository.save(post);
     }
 
-    public void update(Post post) {
+    public void update(Post post, MultipartFile image, boolean shouldDeleteImage) {
+        if (shouldDeleteImage) {
+            deleteImage(post.getImageUrl());
+            post.setImageUrl(null);
+        } else if (image != null && !image.isEmpty()) {
+            deleteImage(post.getImageUrl());
+            save(post, image);
+        } else {
+            String existingImageUrl = postRepository.findById(post.getId()).getImageUrl();
+            post.setImageUrl(existingImageUrl);
+        }
         postRepository.update(post);
     }
 
@@ -65,6 +96,18 @@ public class PostService {
         List<String> tagInDB = tagRepository.findTagByName(tag);
         if (tagInDB.isEmpty()) {
             tagRepository.save(tag);
+        }
+    }
+
+    private void deleteImage(String imageUrl) {
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            return;
+        }
+        Path path = Paths.get(imagesPath, imageUrl);
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            throw new RuntimeException("Не удалось удалить файл", e);
         }
     }
 }
