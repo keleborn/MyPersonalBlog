@@ -1,5 +1,6 @@
 package com.yandex.blog.services;
 
+import com.yandex.blog.model.Comment;
 import com.yandex.blog.model.Post;
 import com.yandex.blog.repository.CommentRepository;
 import com.yandex.blog.repository.PostRepository;
@@ -75,6 +76,10 @@ public class PostService {
     public void deleteCommentByCommentId(Post post, Long commentId) {
         //post.getComments().;
         commentRepository.deleteCommentById(commentId);
+    }
+
+    public void saveComment(Comment comment) {
+        commentRepository.saveComment(comment);
     }
 
     public void deleteById(Long id) {

@@ -26,6 +26,8 @@ public class WebConfiguration implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         String fullPath = Paths.get(imagesPath).toAbsolutePath().toUri().toString();
         registry.addResourceHandler("/images/**").addResourceLocations(fullPath);
+
+        registry.addResourceHandler("/js/**").addResourceLocations("/js/");
     }
 
     @Bean

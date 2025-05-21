@@ -22,9 +22,15 @@
     </div>
     <div>
         <h3>Комментарии</h3>
-        <ul th:each="comment : ${post.comments}">
+        <ul id="comment-list" th:each="comment : ${post.comments}">
             <li th:text="${comment.content}"></li>
         </ul>
+        <form id="comment-form">
+            <input type="hidden" name="postId" th:value="${post.id}">
+            <input type="text" name="content" placeholder="Комментарий" required>
+            <button type="submit">Добавить комментарий</button>
+        </form>
+        <script src="/MyPersonalBlog/js/createComment.js"></script>
     </div>
     <form th:action="@{/post/edit/{id}(id=${post.id})}" method="get">
         <button type="submit" class="btn btn-warning">Редактировать пост</button>

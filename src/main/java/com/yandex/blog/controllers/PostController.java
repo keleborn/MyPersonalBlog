@@ -3,14 +3,10 @@ package com.yandex.blog.controllers;
 import com.yandex.blog.model.Comment;
 import com.yandex.blog.model.Post;
 import com.yandex.blog.services.PostService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -81,5 +77,13 @@ public class PostController {
     public String likePost(@PathVariable("id") Long id, @ModelAttribute("post") Post post) {
         postService.incrementLikes(post);
         return "redirect:/post/" + id;
+    }
+
+    @PostMapping("/comments")
+    @ResponseBody
+    public ResponseEntity<Void> addComment(@RequestParam("postId") long postId,
+                                           @RequestParam("content") String content) {
+        postService.saveComment(new Comment(null, postId, content));
+        return ResponseEntity.ok().build();
     }
 }
