@@ -28,9 +28,10 @@
         <ul>
             <li th:each="post : ${posts}">
                 <a th:href="@{/post/{id}(id=${post.id})}" th:text="${post.title}"></a>
-                <span th:text="${post.shortDescription}"></span>
-                <span th:text="${post.likes}">Лайки: </span>
-                <span th:each="tag : ${post.tags}" th:text="'#' + ${tag}"></span>
+                <span th:text="'Описание' + ${post.shortDescription}"></span>
+                <span th:text="'Лайки: ' + ${post.likes}"></span>
+                <span th:each="tag : ${post.tags}" th:text="'#' + ${tag}">Теги: </span>
+                <span th:text="'Комментариев :' + ${#lists.size(post.comments)}"></span>
             </li>
         </ul>
     </div>

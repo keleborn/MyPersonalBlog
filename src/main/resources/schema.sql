@@ -17,6 +17,12 @@ create table if not exists post_tag_links(
     tag_id bigint not null
 );
 
+create table if not exists comments(
+    id bigserial primary key,
+    post_id bigint not null,
+    content varchar(256) not null
+);
+
 insert into tags(name) values ('First');
 insert into tags(name) values ('Second');
 
@@ -25,3 +31,5 @@ insert into post_tag_links(post_id, tag_id) values(1,1);
 insert into posts(title, shortDescription, content) values ('First', '123', '123456789. 12314123. 12312312. 12312.');
 insert into posts(title, shortDescription, content, likes) values ('Second', '321', '321654987. 1231231.\n 513345.', 10);
 insert into posts(title, shortDescription, content) values ('Third', '777', '777111999. 1928hd19. 123ninsad. aolsdnoi213.\n asldk213. asdkl12.');
+
+insert into comments(post_id, content) values (1, 'Little comment');

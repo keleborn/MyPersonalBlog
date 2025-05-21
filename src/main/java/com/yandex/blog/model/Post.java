@@ -16,6 +16,7 @@ public class Post {
     private String imageUrl;
     private int likes;
     private List<String> tags = new ArrayList<>();
+    private List<Comment> comments = new ArrayList<>();
 
     public Post() {
 

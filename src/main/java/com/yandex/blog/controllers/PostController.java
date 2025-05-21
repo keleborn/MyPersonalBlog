@@ -1,5 +1,6 @@
 package com.yandex.blog.controllers;
 
+import com.yandex.blog.model.Comment;
 import com.yandex.blog.model.Post;
 import com.yandex.blog.services.PostService;
 import org.springframework.stereotype.Controller;

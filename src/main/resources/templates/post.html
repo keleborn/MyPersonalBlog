@@ -20,6 +20,12 @@
             <button type="submit">+</button>
         </form>
     </div>
+    <div>
+        <h3>Комментарии</h3>
+        <ul th:each="comment : ${post.comments}">
+            <li th:text="${comment.content}"></li>
+        </ul>
+    </div>
     <form th:action="@{/post/edit/{id}(id=${post.id})}" method="get">
         <button type="submit" class="btn btn-warning">Редактировать пост</button>
     </form>

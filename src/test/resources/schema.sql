@@ -16,3 +16,9 @@ create table if not exists post_tag_links(
     post_id bigint not null,
     tag_id bigint not null
 );
+
+create table if not exists comments(
+                                       id bigserial primary key,
+                                       post_id bigint not null,
+                                       content varchar(256) not null
+    );

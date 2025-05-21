@@ -1,6 +1,7 @@
 package com.yandex.blog.test.unit;
 
 import com.yandex.blog.model.Post;
+import com.yandex.blog.repository.CommentRepository;
 import com.yandex.blog.repository.PostRepository;
 import com.yandex.blog.repository.TagRepository;
 import com.yandex.blog.services.FeedService;
@@ -29,6 +30,9 @@ public class FeedServiceUnitTest {
 
     @Mock
     private TagRepository tagRepository;
+
+    @Mock
+    private CommentRepository commentRepository;
 
     @InjectMocks
     private FeedService feedService;

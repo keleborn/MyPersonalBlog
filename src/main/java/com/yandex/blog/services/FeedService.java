@@ -1,6 +1,7 @@
 package com.yandex.blog.services;
 
 import com.yandex.blog.model.Post;
+import com.yandex.blog.repository.CommentRepository;
 import com.yandex.blog.repository.PostRepository;
 import com.yandex.blog.repository.TagRepository;
 import org.springframework.stereotype.Service;
@@ -13,10 +14,12 @@ import static com.yandex.blog.utils.PostUtils.parseTags;
 public class FeedService {
     private final PostRepository postRepository;
     private final TagRepository tagRepository;
+    private final CommentRepository commentRepository;
 
-    public FeedService(PostRepository postRepository, TagRepository tagRepository) {
+    public FeedService(PostRepository postRepository, TagRepository tagRepository, CommentRepository commentRepository) {
         this.postRepository = postRepository;
         this.tagRepository = tagRepository;
+        this.commentRepository = commentRepository;
     }
 
     public List<Post> findAll() {
@@ -27,6 +30,7 @@ public class FeedService {
         int offset = (page - 1) * limit;
         List<Post> posts = postRepository.findAllWithPagination(limit, offset, tagRepository.findTagIdsByNames(tags));
         posts.forEach(this::setTags);
+        posts.forEach(post -> post.setComments(commentRepository.getCommentsByPostId(post.getId())));
         return posts;
     }
 

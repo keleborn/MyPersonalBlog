@@ -2,6 +2,7 @@ package com.yandex.blog.test.unit;
 
 
 import com.yandex.blog.model.Post;
+import com.yandex.blog.repository.CommentRepository;
 import com.yandex.blog.repository.PostRepository;
 import com.yandex.blog.repository.TagRepository;
 import com.yandex.blog.services.PostService;
@@ -16,7 +17,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class PostServiceUnitTest {
 
@@ -25,6 +29,9 @@ public class PostServiceUnitTest {
 
     @Mock
     private TagRepository tagRepository;
+
+    @Mock
+    private CommentRepository commentRepository;
 
     @InjectMocks
     private PostService postService;

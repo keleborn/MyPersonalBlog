@@ -1,6 +1,7 @@
 package com.yandex.blog.services;
 
 import com.yandex.blog.model.Post;
+import com.yandex.blog.repository.CommentRepository;
 import com.yandex.blog.repository.PostRepository;
 import com.yandex.blog.repository.TagRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,19 +23,22 @@ import static com.yandex.blog.utils.PostUtils.splitBySymbol;
 public class PostService {
     private final PostRepository postRepository;
     private final TagRepository tagRepository;
+    private final CommentRepository commentRepository;
 
     @Value("${image.upload.dir}")
     private String imagesPath;
 
-    public PostService(PostRepository postRepository, TagRepository tagRepository) {
+    public PostService(PostRepository postRepository, TagRepository tagRepository , CommentRepository commentRepository) {
         this.postRepository = postRepository;
         this.tagRepository = tagRepository;
+        this.commentRepository = commentRepository;
     }
 
     public Post findById(Long id) {
         Post post = postRepository.findById(id);
         if (post != null) {
             post.setTags(tagRepository.findAllTagsByPostId(id));
+            post.setComments(commentRepository.getCommentsByPostId(id));
         }
         return post;
     }
@@ -68,9 +72,15 @@ public class PostService {
         postRepository.update(post);
     }
 
+    public void deleteCommentByCommentId(Post post, Long commentId) {
+        //post.getComments().;
+        commentRepository.deleteCommentById(commentId);
+    }
+
     public void deleteById(Long id) {
         postRepository.deleteById(id);
         tagRepository.deleteTagsForPost(id);
+        commentRepository.deleteAllCommentsByPostId(id);
     }
 
     public List<String> splitContentToParagraphs(String content) {
