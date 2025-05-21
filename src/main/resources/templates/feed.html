@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"><head>
+    <meta charset="UTF-8">
+    <title>Лента постов</title>
+</head>
+
+<body>
+    <h1>Лента постов</h1>
+    <form method="get" action="/MyPersonalBlog/feed">
+        <select name="limit">
+            <option value="5" th:selected="${limit == 5}">5</option>
+            <option value="10" th:selected="${limit == 10}">10</option>
+            <option value="20" th:selected="${limit == 20}">20</option>
+        </select>
+
+        <input type="hidden" name="tags" th:value="${selectedTags}">
+        <button type="submit">Показать</button>
+    </form>
+    <form method="get" action="/MyPersonalBlog/feed">
+        <label for="tags">Тег фильтр</label>
+        <input type="text" name="tags" id="tags" th:value="${selectedTags}">
+
+        <input type="hidden" name="limit" th:value="${limit}">
+        <input type="hidden" name="page" th:value="${currentPage}">
+        <input type="submit" value="Применить">
+    </form>
+    <div>
+        <ul>
+            <li th:each="post : ${posts}">
+                <a th:href="@{/post/{id}(id=${post.id})}" th:text="${post.title}"></a>
+                <span th:text="${post.shortDescription}"></span>
+                <span th:text="${post.likes}">Лайки: </span>
+                <span th:each="tag : ${post.tags}" th:text="'#' + ${tag}"></span>
+            </li>
+        </ul>
+    </div>
+    <div>
+        <span>Страница</span>
+        <ul>
+            <li th:each="i : ${@pageUtils.getPages(totalPages)}">
+                <a th:href="@{/feed(page=${i}, limit=${limit}, tags=${selectedTags})}" th:text="${i}" th:classappend="${i == currentPage ? 'active' : ''}"></a>
+            </li>
+        </ul>
+    </div>
+    <a href="/MyPersonalBlog/post/new">
+        <button>Создать новый пост</button>
+    </a>
+</body>
+</html>

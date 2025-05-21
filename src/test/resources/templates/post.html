@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"><head>
+    <meta charset="UTF-8"/>
+    <title th:text="${post.title}">Post</title>
+</head>
+<body>
+    <h1 th:text="${post.title}">Title</h1>
+    <p>Paragraphs size: <span th:text="${#lists.size(paragraphs)}">0</span></p>
+    <div th:each="paragraph : ${paragraphs}">
+        <pre th:text="${paragraph}"></pre>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px">
+        <span>Лайки: <span th:text="${post.likes}"></span></span>
+        <form th:action="@{/post/like/{id}(id=${post.id})}" method="post" style="display: inline">
+            <button type="submit">+</button>
+        </form>
+    </div>
+    <form th:action="@{/post/edit/{id}(id=${post.id})}" method="get">
+        <button type="submit" class="btn btn-warning">Редактировать пост</button>
+    </form>
+    <form th:action="@{/post/delete/{id}(id=${post.id})}" method="post">
+        <button type="submit" class="btn btn-danger">Удалить пост</button>
+    </form>
+    <a href="/MyPersonalBlog/feed">Назад к ленте</a>
+</body>
+</html>
