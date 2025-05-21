@@ -82,6 +82,10 @@ public class PostService {
         commentRepository.saveComment(comment);
     }
 
+    public void updateComment(Long commentId, String content) {
+        commentRepository.updateComment(new Comment(commentId, null, content));
+    }
+
     public void deleteById(Long id) {
         postRepository.deleteById(id);
         tagRepository.deleteTagsForPost(id);

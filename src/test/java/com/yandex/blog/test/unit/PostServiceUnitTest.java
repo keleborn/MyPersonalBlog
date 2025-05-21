@@ -1,6 +1,7 @@
 package com.yandex.blog.test.unit;
 
 
+import com.yandex.blog.model.Comment;
 import com.yandex.blog.model.Post;
 import com.yandex.blog.repository.CommentRepository;
 import com.yandex.blog.repository.PostRepository;
@@ -17,6 +18,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -42,7 +45,7 @@ public class PostServiceUnitTest {
     }
 
     @Test
-    void findById_shouldReturnPostWhenExists() {
+    void findById_shouldCallPostRepositoryFindByIdAndTagRepositoryFindAllTags() {
         Post post = new Post(1L, "title1", "desc1", "content1", 0, null);
 
         when(postRepository.findById(1L)).thenReturn(post);
@@ -58,7 +61,7 @@ public class PostServiceUnitTest {
     }
 
     @Test
-    void findById_shouldReturnNullWhenPostDoesNotExist() {
+    void findById_shouldCallRepositoryFindById() {
         when(postRepository.findById(1L)).thenReturn(null);
 
         postService.findById(1L);
@@ -67,7 +70,7 @@ public class PostServiceUnitTest {
     }
 
     @Test
-    void save_shouldSavePost() {
+    void save_shouldCallSave() {
         MultipartFile file = mock(MultipartFile.class);
         when(file.isEmpty()).thenReturn(true);
         Post post = new Post(1L, "title1", "desc1", "content1", 0, null);
@@ -77,7 +80,7 @@ public class PostServiceUnitTest {
     }
 
     @Test
-    void deleteById_shouldDeletePost() {
+    void deleteById_shouldCallPostAndTagRepositoriesDelete() {
         postService.deleteById(1L);
         verify(postRepository, times(1)).deleteById(1L);
         verify(tagRepository, times(1)).deleteTagsForPost(1L);
@@ -94,7 +97,7 @@ public class PostServiceUnitTest {
     }
 
     @Test
-    void update_shouldUpdatePost() {
+    void update_shouldCallRepositoryUpdate() {
         Post post = new Post(1L, "title1", "desc1", "content1", 0, null);
 
         when(postRepository.findById(1L)).thenReturn(post);
@@ -123,5 +126,23 @@ public class PostServiceUnitTest {
         verify(tagRepository, times(1)).save("tag1");
         verify(tagRepository, times(1)).findTagIdsByNames(tags);
         verify(tagRepository, times(1)).attachTags(1L, List.of(1L));
+    }
+
+    @Test
+    void saveComments_shouldCallRepositorySave() {
+        Comment comment = new Comment(1L, 1L, "comment1");
+
+        postService.saveComment(comment);
+
+        verify(commentRepository).saveComment(comment);
+    }
+
+    @Test
+    void updateComment_shouldCallRepositoryUpdateComment() {
+        String updatedContent = "updatedContent";
+
+        postService.updateComment(1L, updatedContent);
+
+        verify(commentRepository).updateComment(any(Comment.class));
     }
 }

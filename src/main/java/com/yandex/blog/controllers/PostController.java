@@ -86,4 +86,12 @@ public class PostController {
         postService.saveComment(new Comment(null, postId, content));
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/comments/edit")
+    @ResponseBody
+    public ResponseEntity<Void> editComment(@RequestParam("id") long id,
+                                            @RequestParam("content") String content) {
+        postService.updateComment(id, content);
+        return ResponseEntity.ok().build();
+    }
 }
