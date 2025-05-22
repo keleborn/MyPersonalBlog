@@ -2,6 +2,10 @@ package com.yandex.blog.test.integration;
 
 import com.yandex.blog.WebConfiguration;
 import com.yandex.blog.configuration.DataSourceConfiguration;
+import com.yandex.blog.model.Comment;
+import com.yandex.blog.model.Post;
+import com.yandex.blog.repository.CommentRepository;
+import com.yandex.blog.repository.PostRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +25,9 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -41,6 +47,12 @@ public class PostControllerIntegrationTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private PostRepository postRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
+
     @Value("${image.upload.dir}")
     private String uploadDir;
 
@@ -51,7 +63,9 @@ public class PostControllerIntegrationTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 
         jdbcTemplate.execute("DELETE FROM posts");
+        jdbcTemplate.execute("DELETE FROM comments");
         jdbcTemplate.execute("alter table posts alter column id restart with 1");
+        jdbcTemplate.execute("alter table comments alter column id restart with 1");
         jdbcTemplate.execute("insert into posts(title, shortDescription, content) values ('Title1', 'ShorDesc1', 'Content1')");
     }
 
@@ -73,6 +87,7 @@ public class PostControllerIntegrationTest {
     void createPost_shouldAddPostToDatabaseAndRedirect() throws Exception {
         InputStream is = getClass().getClassLoader().getResourceAsStream("images/test.png");
         MockMultipartFile file = new MockMultipartFile("image", "test.png", "image/png", is);
+
         mockMvc.perform(multipart("/post/new")
                         .file(file)
                         .param("title","Title2")
@@ -80,6 +95,9 @@ public class PostControllerIntegrationTest {
                         .param("content","Content2"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/feed"));
+
+        Post savedPost = postRepository.findById(2L);
+        assertEquals("Title2", savedPost.getTitle());
     }
 
     @Test
@@ -99,6 +117,8 @@ public class PostControllerIntegrationTest {
                 .param("method", "delete"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/feed"));
+
+        assertEquals(0,postRepository.findAll().size());
     }
 
     @Test
@@ -110,6 +130,9 @@ public class PostControllerIntegrationTest {
                         .param("tags", "tagsUpdated"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/post/1"));
+
+        Post updatedPost = postRepository.findById(1L);
+        assertEquals("Title2Updated", updatedPost.getTitle());
     }
 
     @Test
@@ -122,14 +145,50 @@ public class PostControllerIntegrationTest {
     }
 
     @Test
-    void likePost_shouldRedirectToPostHtml() throws Exception {
+    void likePost_shouldIncrementLikesAndRedirectToPostHtml() throws Exception {
         mockMvc.perform(post("/post/like/1"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(view().name("redirect:/post/1"));
+
+        assertEquals(1, postRepository.findById(1L).getLikes());
+    }
+
+    @Test
+    void addComment_shouldAddCommentToDatabase() throws Exception {
+        mockMvc.perform(post("/post/comments")
+                        .param("postId", "1")
+                        .param("content", "content"))
+                .andExpect(status().isOk());
+
+        assertEquals(1, commentRepository.countByPostId(1L));
+    }
+
+    @Test
+    void editComment_shouldEditCommentInDatabase() throws Exception {
+        commentRepository.saveComment(new Comment(null, 1L, "content"));
+        mockMvc.perform(post("/post/comments/edit")
+                        .param("id", "1")
+                        .param("content", "updatedContent"))
+                .andExpect(status().isOk());
+
+        List<Comment> comments = commentRepository.getCommentsByPostId(1L);
+
+        assertEquals(1, comments.size());
+        assertEquals("updatedContent", comments.getFirst().getContent());
+    }
+
+    @Test
+    void deleteComment_shouldDeleteCommentFromDatabase() throws Exception {
+        commentRepository.saveComment(new Comment(null, 1L, "content"));
+        mockMvc.perform(post("/post/comments/delete")
+                        .param("id", "1"))
+                .andExpect(status().isOk());
+
+        assertEquals(0, commentRepository.countByPostId(1L));
     }
 
     @AfterEach
-    public void cleanUpUploadedImages() throws Exception {
+    void cleanUpUploadedImages() throws Exception {
         Path dir = Paths.get(uploadDir);
         if (Files.exists(dir)) {
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {

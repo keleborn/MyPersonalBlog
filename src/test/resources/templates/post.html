@@ -15,6 +15,21 @@
             <button type="submit">+</button>
         </form>
     </div>
+    <div>
+        <h3>Комментарии</h3>
+        <ul id="comment-list">
+            <li th:each="comment : ${post.comments}" th:attr="data-id=${comment.id}">
+                <span class="comment-content" th:text="${comment.content}"></span>
+                <button class="edit-btn" type="button">Редактировать</button>
+                <button class="delete-btn" type="button">Удалить</button>
+            </li>
+        </ul>
+        <form id="comment-form">
+            <input type="hidden" name="postId" th:value="${post.id}"/>
+            <input type="text" name="content" placeholder="Комментарий" required="required"/>
+            <button type="submit">Добавить комментарий</button>
+        </form>
+    </div>
     <form th:action="@{/post/edit/{id}(id=${post.id})}" method="get">
         <button type="submit" class="btn btn-warning">Редактировать пост</button>
     </form>
@@ -22,5 +37,8 @@
         <button type="submit" class="btn btn-danger">Удалить пост</button>
     </form>
     <a href="/MyPersonalBlog/feed">Назад к ленте</a>
+    <script src="/MyPersonalBlog/js/createComment.js"></script>
+    <script src="/MyPersonalBlog/js/editComment.js"></script>
+    <script src="/MyPersonalBlog/js/deleteComment.js"></script>
 </body>
 </html>
