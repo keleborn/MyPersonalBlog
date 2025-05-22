@@ -94,4 +94,11 @@ public class PostController {
         postService.updateComment(id, content);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/comments/delete")
+    @ResponseBody
+    public ResponseEntity<Void> deleteComment(@RequestParam("id") long id) {
+        postService.deleteCommentByCommentId(id);
+        return ResponseEntity.ok().build();
+    }
 }

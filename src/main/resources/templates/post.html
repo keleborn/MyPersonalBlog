@@ -26,6 +26,7 @@
             <li th:each="comment : ${post.comments}" th:attr="data-id=${comment.id}">
                 <span class="comment-content" th:text="${comment.content}"></span>
                 <button class="edit-btn" type="button">Редактировать</button>
+                <button class="delete-btn" type="button">Удалить</button>
             </li>
         </ul>
         <form id="comment-form">
@@ -43,5 +44,6 @@
     <a href="/MyPersonalBlog/feed">Назад к ленте</a>
     <script src="/MyPersonalBlog/js/createComment.js"></script>
     <script src="/MyPersonalBlog/js/editComment.js"></script>
+    <script src="/MyPersonalBlog/js/deleteComment.js"></script>
 </body>
 </html>
