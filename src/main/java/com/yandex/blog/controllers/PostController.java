@@ -81,10 +81,10 @@ public class PostController {
 
     @PostMapping("/comments")
     @ResponseBody
-    public ResponseEntity<Void> addComment(@RequestParam("postId") long postId,
+    public ResponseEntity<Long> addComment(@RequestParam("postId") long postId,
                                            @RequestParam("content") String content) {
-        postService.saveComment(new Comment(null, postId, content));
-        return ResponseEntity.ok().build();
+        Comment saved = postService.saveComment(new Comment(null, postId, content));
+        return ResponseEntity.ok(saved.getId());
     }
 
     @PostMapping("/comments/edit")

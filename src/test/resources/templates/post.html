@@ -5,9 +5,14 @@
 </head>
 <body>
     <h1 th:text="${post.title}">Title</h1>
-    <p>Paragraphs size: <span th:text="${#lists.size(paragraphs)}">0</span></p>
+    <div th:if="${post.imageUrl != null}">
+        <img th:src="@{'/images/' + ${post.imageUrl}}" alt="Картинка"/>
+    </div>
     <div th:each="paragraph : ${paragraphs}">
         <pre th:text="${paragraph}"></pre>
+    </div>
+    <div>
+        <span th:each="tag : ${post.tags}" th:text="'#' + ${tag} "></span>
     </div>
     <div style="display: flex; align-items: center; gap: 10px">
         <span>Лайки: <span th:text="${post.likes}"></span></span>
@@ -36,9 +41,9 @@
     <form th:action="@{/post/delete/{id}(id=${post.id})}" method="post">
         <button type="submit" class="btn btn-danger">Удалить пост</button>
     </form>
-    <a href="/MyPersonalBlog/feed">Назад к ленте</a>
-    <script src="/MyPersonalBlog/js/createComment.js"></script>
-    <script src="/MyPersonalBlog/js/editComment.js"></script>
-    <script src="/MyPersonalBlog/js/deleteComment.js"></script>
+    <a href="/feed">Назад к ленте</a>
+    <script src="/createComment.js"></script>
+    <script src="/editComment.js"></script>
+    <script src="/deleteComment.js"></script>
 </body>
 </html>

@@ -3,6 +3,7 @@ package com.yandex.blog.test.unit;
 
 import com.yandex.blog.model.Comment;
 import com.yandex.blog.model.Post;
+import com.yandex.blog.model.Tag;
 import com.yandex.blog.repository.CommentRepository;
 import com.yandex.blog.repository.PostRepository;
 import com.yandex.blog.repository.TagRepository;
@@ -15,11 +16,11 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -48,7 +49,7 @@ public class PostServiceUnitTest {
     void findById_shouldCallPostRepositoryFindByIdAndTagRepositoryFindAllTags() {
         Post post = new Post(1L, "title1", "desc1", "content1", 0, null);
 
-        when(postRepository.findById(1L)).thenReturn(post);
+        when(postRepository.findById(1L)).thenReturn(Optional.of(post));
         Post result = postService.findById(1L);
         assertNotNull(result);
         assertEquals(post.getId(), result.getId());
@@ -62,7 +63,7 @@ public class PostServiceUnitTest {
 
     @Test
     void findById_shouldCallRepositoryFindById() {
-        when(postRepository.findById(1L)).thenReturn(null);
+        when(postRepository.findById(1L)).thenReturn(Optional.empty());
 
         postService.findById(1L);
 
@@ -100,11 +101,11 @@ public class PostServiceUnitTest {
     void update_shouldCallRepositoryUpdate() {
         Post post = new Post(1L, "title1", "desc1", "content1", 0, null);
 
-        when(postRepository.findById(1L)).thenReturn(post);
+        when(postRepository.findById(1L)).thenReturn(Optional.of(post));
 
         postService.update(post, null, false);
 
-        verify(postRepository, times(1)).update(post);
+        verify(postRepository, times(1)).update(post.getId(), post.getTitle(), post.getShortDescription(), post.getContent(), post.getImageUrl());
         verify(postRepository, times(1)).findById(1L);
     }
 
@@ -112,7 +113,7 @@ public class PostServiceUnitTest {
     void incrementLikes_shouldIncrementLikes() {
         Post post = new Post(1L, "title1", "desc1", "content1", 0, null);
         postService.incrementLikes(post);
-        verify(postRepository, times(1)).incrementLikes(post);
+        verify(postRepository, times(1)).incrementLikes(post.getId());
     }
 
     @Test
@@ -123,9 +124,10 @@ public class PostServiceUnitTest {
         postService.saveTags(1L, tags);
 
         verify(tagRepository).deleteTagsForPost(1L);
-        verify(tagRepository, times(1)).save("tag1");
+        verify(tagRepository, times(1)).findTagByName(eq("tag1"));
+        verify(tagRepository, times(1)).save(tagWithName("tag1"));
         verify(tagRepository, times(1)).findTagIdsByNames(tags);
-        verify(tagRepository, times(1)).attachTags(1L, List.of(1L));
+        verify(tagRepository, times(1)).attachTag(1L, 1L);
     }
 
     @Test
@@ -134,7 +136,7 @@ public class PostServiceUnitTest {
 
         postService.saveComment(comment);
 
-        verify(commentRepository).saveComment(comment);
+        verify(commentRepository).save(comment);
     }
 
     @Test
@@ -143,6 +145,10 @@ public class PostServiceUnitTest {
 
         postService.updateComment(1L, updatedContent);
 
-        verify(commentRepository).updateComment(any(Comment.class));
+        verify(commentRepository).updateContentById(any(Long.class), any(String.class));
+    }
+
+    private Tag tagWithName(String tagName) {
+        return argThat(tag -> tag.getId() == null && tag.getName().equals(tagName));
     }
 }

@@ -6,9 +6,8 @@ import com.yandex.blog.repository.PostRepository;
 import com.yandex.blog.repository.TagRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import static com.yandex.blog.utils.PostUtils.parseTags;
 
 @Service
 public class FeedService {
@@ -23,18 +22,27 @@ public class FeedService {
     }
 
     public List<Post> findAll() {
-        return postRepository.findAll();
+        List<Post> posts = postRepository.findAll();
+        posts.forEach(this::setTags);
+        return posts;
     }
 
     public List<Post> findAllByTagsWithPagination(int limit, int page, List<String> tags) {
         int offset = (page - 1) * limit;
-        List<Post> posts = postRepository.findAllWithPagination(limit, offset, tagRepository.findTagIdsByNames(tags));
+        List<Post> posts = new ArrayList<>();
+        if (tags == null || tags.isEmpty()) {
+            posts = postRepository.findAllWithPagination(limit, offset);
+        } else {
+            posts = postRepository.findAllWithPagination(limit, offset, tagRepository.findTagIdsByNames(tags));
+        }
         posts.forEach(this::setTags);
-        posts.forEach(post -> post.setComments(commentRepository.getCommentsByPostId(post.getId())));
         return posts;
     }
 
     public int countPosts(List<String> tagList) {
+        if (tagList == null || tagList.isEmpty()) {
+            return postRepository.countPosts();
+        }
         return postRepository.countPosts(tagRepository.findTagIdsByNames(tagList));
     }
 

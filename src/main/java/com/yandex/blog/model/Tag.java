@@ -7,20 +7,18 @@ import org.springframework.data.relational.core.mapping.Table;
 
 @Getter
 @Setter
-@Table("COMMENTS")
-public class Comment {
+@Table("TAGS")
+public class Tag {
     @Id
     private Long id;
-    private Long postId;
-    private String content;
+    private String name;
 
-    public Comment() {
+    public Tag() {
 
     }
 
-    public Comment(Long id, Long postId, String content) {
+    public Tag(Long id, String name) {
         this.id = id;
-        this.postId = postId;
-        this.content = content;
+        this.name = name;
     }
 }

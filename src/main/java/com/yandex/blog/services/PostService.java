@@ -2,6 +2,7 @@ package com.yandex.blog.services;
 
 import com.yandex.blog.model.Comment;
 import com.yandex.blog.model.Post;
+import com.yandex.blog.model.Tag;
 import com.yandex.blog.repository.CommentRepository;
 import com.yandex.blog.repository.PostRepository;
 import com.yandex.blog.repository.TagRepository;
@@ -15,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.yandex.blog.utils.PostUtils.splitBySentences;
@@ -36,12 +38,9 @@ public class PostService {
     }
 
     public Post findById(Long id) {
-        Post post = postRepository.findById(id);
-        if (post != null) {
-            post.setTags(tagRepository.findAllTagsByPostId(id));
-            post.setComments(commentRepository.getCommentsByPostId(id));
-        }
-        return post;
+        Optional<Post> post = postRepository.findById(id);
+        post.ifPresent(value -> value.setTags(tagRepository.findAllTagsByPostId(id)));
+        return post.orElse(null);
     }
 
     public void save(Post post, MultipartFile image) {
@@ -67,22 +66,22 @@ public class PostService {
             deleteImage(post.getImageUrl());
             save(post, image);
         } else {
-            String existingImageUrl = postRepository.findById(post.getId()).getImageUrl();
-            post.setImageUrl(existingImageUrl);
+            Optional<Post> postOptional = postRepository.findById(post.getId());
+            postOptional.ifPresent(value -> post.setImageUrl(value.getImageUrl()));
         }
-        postRepository.update(post);
+        postRepository.update(post.getId(), post.getTitle(), post.getShortDescription(), post.getContent(), post.getImageUrl());
     }
 
     public void deleteCommentByCommentId(Long commentId) {
         commentRepository.deleteCommentById(commentId);
     }
 
-    public void saveComment(Comment comment) {
-        commentRepository.saveComment(comment);
+    public Comment saveComment(Comment comment) {
+        return commentRepository.save(comment);
     }
 
     public void updateComment(Long commentId, String content) {
-        commentRepository.updateComment(new Comment(commentId, null, content));
+        commentRepository.updateContentById(commentId, content);
     }
 
     public void deleteById(Long id) {
@@ -101,19 +100,21 @@ public class PostService {
     }
 
     public void incrementLikes(Post post) {
-        postRepository.incrementLikes(post);
+        postRepository.incrementLikes(post.getId());
     }
 
     public void saveTags(long postId, List<String> tags) {
         tagRepository.deleteTagsForPost(postId);
         tags.forEach(this::createTagIfNotExists);
-        tagRepository.attachTags(postId, tagRepository.findTagIdsByNames(tags));
+        for (long tag : tagRepository.findTagIdsByNames(tags)) {
+            tagRepository.attachTag(postId, tag);
+        }
     }
 
     private void createTagIfNotExists(String tag) {
-        List<String> tagInDB = tagRepository.findTagByName(tag);
-        if (tagInDB.isEmpty()) {
-            tagRepository.save(tag);
+        String tagInDB = tagRepository.findTagByName(tag);
+        if (tagInDB == null || tagInDB.isEmpty()) {
+            tagRepository.save(new Tag(null, tag));
         }
     }
 

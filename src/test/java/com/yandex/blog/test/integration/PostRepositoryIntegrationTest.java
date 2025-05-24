@@ -1,139 +1,105 @@
 package com.yandex.blog.test.integration;
 
-import com.yandex.blog.configuration.DataSourceConfiguration;
 import com.yandex.blog.model.Post;
-import com.yandex.blog.repository.JdbcNativePostRepository;
 import com.yandex.blog.repository.PostRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
-
-@SpringJUnitConfig(classes = {DataSourceConfiguration.class, JdbcNativePostRepository.class})
-@TestPropertySource(locations = "classpath:test-application.properties")
-public class PostRepositoryIntegrationTest {
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+public class PostRepositoryIntegrationTest extends AbstractRepositoryIntegrationTest {
 
     @Autowired
     private PostRepository postRepository;
 
     @BeforeEach
     public void setUp() {
-        jdbcTemplate.execute("DELETE FROM posts");
-        jdbcTemplate.execute("alter table posts alter column id restart with 1");
-        jdbcTemplate.execute("insert into posts(title, shortDescription, content) values ('Title1', 'ShorDesc1', 'Content1')");
-        jdbcTemplate.execute("insert into posts(title, shortDescription, content) values ('Title2', 'ShorDesc2', 'Content2')");
-        jdbcTemplate.execute("insert into posts(title, shortDescription, content) values ('Title3', 'ShorDesc3', 'Content3')");
+        postRepository.save(new Post(null, "Title1", "ShorDesc1", "Content1", 0, null));
+        postRepository.save(new Post(null, "Title2", "ShorDesc2", "Content2", 0, null));
+        postRepository.save(new Post(null, "Title3", "ShorDesc3", "Content3", 0, null));
     }
 
     @Test
     void save_shouldAddPostToRepository() {
-        Post post = new Post();
-        post.setTitle("Test Post");
-        post.setContent("Test Content");
-        post.setShortDescription("Test ShortDescription");
+        Optional<Post> savedPost = postRepository.findById(1L);
 
-        postRepository.save(post);
-        Post savedPost = postRepository.findAll().stream()
-                .filter(createdPost -> createdPost.getId().equals(4L))
-                .findFirst()
-                .orElse(null);
-
-        assertNotNull(savedPost);
-        assertEquals(4L, savedPost.getId());
-        assertEquals(post.getTitle(), savedPost.getTitle());
-        assertEquals(post.getContent(), savedPost.getContent());
-        assertEquals(post.getShortDescription(), savedPost.getShortDescription());
+        assertThat(savedPost).isPresent();
+        assertThat(savedPost.get().getId()).isEqualTo(1L);
+        assertThat(savedPost.get().getTitle()).isEqualTo("Title1");
+        assertThat(savedPost.get().getContent()).isEqualTo("Content1");
+        assertThat(savedPost.get().getShortDescription()).isEqualTo("ShorDesc1");
     }
 
     @Test
     void findAll_shouldReturnAllPosts() {
         List<Post> posts = postRepository.findAll();
 
-        assertNotNull(posts);
-        assertEquals(3, posts.size());
-
-        Post post = posts.getFirst();
-        assertEquals(1L, post.getId());
-        assertEquals("Title1", post.getTitle());
+        assertThat(posts).isNotEmpty();
+        assertThat(posts.size()).isEqualTo(3);
+        assertThat(posts.get(0).getTitle()).isEqualTo("Title1");
+        assertThat(posts.get(1).getTitle()).isEqualTo("Title2");
+        assertThat(posts.get(2).getTitle()).isEqualTo("Title3");
     }
 
     @Test
     void findAllWithPagination_shouldReturnLimitedNumberOfPostsWithOffset() {
-        List<Post> page1 = postRepository.findAllWithPagination(3, 3, new ArrayList<>());
-        List<Post> page2 = postRepository.findAllWithPagination(3, 0, new ArrayList<>());
-        List<Post> page3 = postRepository.findAllWithPagination(2, 1, new ArrayList<>());
+        List<Post> page1 = postRepository.findAllWithPagination(3, 3);
+        List<Post> page2 = postRepository.findAllWithPagination(3, 0);
+        List<Post> page3 = postRepository.findAllWithPagination(2, 1);
 
-        assertEquals(0, page1.size());
-        assertEquals(3, page2.size());
-        assertEquals(2, page3.size());
-        assertEquals("Title1", page2.getFirst().getTitle());
-        assertEquals("Title2", page3.getFirst().getTitle());
+        assertThat(page1).isEmpty();
+        assertThat(page2.size()).isEqualTo(3);
+        assertThat(page3.size()).isEqualTo(2);
+
+        assertThat(page2.getFirst().getTitle()).isEqualTo("Title1");
+        assertThat(page3.getFirst().getTitle()).isEqualTo("Title2");
     }
 
     @Test
-    void findById_shouldReturnPost() {
-        Post post = postRepository.findById(2L);
+    void findAllWithPagination_withTags_shouldReturnLimitedNumberOfPostsWithOffsetFilteredByTags() {
+        List<Post> page = postRepository.findAllWithPagination(3, 0, new ArrayList<>());
 
-        assertNotNull(post);
-
-        assertEquals(2L, post.getId());
-        assertEquals("Title2", post.getTitle());
-        assertEquals("ShorDesc2", post.getShortDescription());
-        assertEquals("Content2", post.getContent());
+        assertThat(page).isEmpty();
     }
 
     @Test
     void deleteById_shouldRemovePostFromDatabase() {
         postRepository.deleteById(1L);
 
-        List<Post> posts = postRepository.findAll();
+        Optional<Post> post = postRepository.findById(1L);
 
-        Post deletedPost = posts.stream()
-                .filter(createdPost -> createdPost.getId().equals(1L))
-                .findFirst()
-                .orElse(null);
-        assertNull(deletedPost);
+        assertThat(post).isNotPresent();
     }
 
     @Test
     void countPosts_shouldReturnNumberOfPostsInDatabase() {
+        int count = postRepository.countPosts();
+
+        assertThat(count).isEqualTo(3);
+    }
+
+    @Test
+    void countPosts_withTags_shouldReturnNumberOfPostsFilteredByTagsInDatabase() {
         int count = postRepository.countPosts(new ArrayList<>());
-        assertEquals(3, count);
+
+        assertThat(count).isEqualTo(0);
     }
 
     @Test
     void update_shouldUpdatePost() {
-        Post post = new Post(2L, "Title2Updated", "ShorDesc2Updated", "Content2Updated", 0, "testPathUrl");
-        postRepository.update(post);
+        postRepository.update(2L, "Title2Updated", "ShorDesc2Updated", "Content2Updated", "UrlUpdated");
 
-        Post updatedPost = postRepository.findById(2L);
-        assertNotNull(updatedPost);
-        assertEquals("Title2Updated", updatedPost.getTitle());
-        assertEquals("ShorDesc2Updated", updatedPost.getShortDescription());
-        assertEquals("Content2Updated", updatedPost.getContent());
-        assertEquals("testPathUrl", updatedPost.getImageUrl());
-    }
+        Optional<Post> post = postRepository.findById(2L);
 
-    @Test
-    void incrementLikes_shouldIncrementLikes() {
-        Post post = postRepository.findById(2L);
-        postRepository.incrementLikes(post);
-
-        Post updatedPost = postRepository.findById(2L);
-        assertNotNull(updatedPost);
-        assertEquals(1, updatedPost.getLikes());
+        assertThat(post).isPresent();
+        assertThat(post.get().getTitle()).isEqualTo("Title2Updated");
+        assertThat(post.get().getShortDescription()).isEqualTo("ShorDesc2Updated");
+        assertThat(post.get().getContent()).isEqualTo("Content2Updated");
+        assertThat(post.get().getImageUrl()).isEqualTo("UrlUpdated");
     }
 }

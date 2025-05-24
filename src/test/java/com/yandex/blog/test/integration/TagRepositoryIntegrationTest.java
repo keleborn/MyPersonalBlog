@@ -1,106 +1,82 @@
 package com.yandex.blog.test.integration;
 
-import com.yandex.blog.configuration.DataSourceConfiguration;
-import com.yandex.blog.repository.JdbcNativeTagRepository;
+import com.yandex.blog.model.Tag;
 import com.yandex.blog.repository.TagRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringJUnitConfig(classes = {DataSourceConfiguration.class, JdbcNativeTagRepository.class})
-@TestPropertySource(locations = "classpath:test-application.properties")
-public class TagRepositoryIntegrationTest {
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+public class TagRepositoryIntegrationTest extends AbstractRepositoryIntegrationTest{
 
     @Autowired
     private TagRepository tagRepository;
 
     @BeforeEach
     public void setUp() {
-        jdbcTemplate.execute("DELETE FROM tags");
-        jdbcTemplate.execute("DELETE FROM post_tag_links");
-        jdbcTemplate.execute("alter table tags alter column id restart with 1");
+        tagRepository.save(new Tag(null, "tag1"));
+        tagRepository.save(new Tag(null, "tag2"));
+        tagRepository.save(new Tag(null, "tag3"));
 
-        jdbcTemplate.execute("insert into tags(name) values ('tag1')");
-        jdbcTemplate.execute("insert into tags(name) values ('tag2')");
-        jdbcTemplate.execute("insert into tags(name) values ('tag3')");
+        tagRepository.attachTag(1L, 1L);
+        tagRepository.attachTag(1L, 2L);
+    }
 
-        jdbcTemplate.execute("insert into post_tag_links(post_id, tag_id) values (1, 1)");
-        jdbcTemplate.execute("insert into post_tag_links(post_id, tag_id) values (1, 2)");
+    @Test
+    void save_shouldSaveTag() {
+        String savedTag = tagRepository.findTagByName("tag1");
+
+        assertThat(savedTag).isNotNull();
+        assertThat(savedTag).isEqualTo("tag1");
     }
 
     @Test
     void findAllTagsByPostId_shouldReturnAllTagsByPostId() {
         List<String> tags = tagRepository.findAllTagsByPostId(1L);
 
-        assertNotNull(tags);
-        assertEquals(2, tags.size());
-        assertEquals("tag1", tags.get(0));
-        assertEquals("tag2", tags.get(1));
+        assertThat(tags).isNotEmpty();
+        assertThat(tags.size()).isEqualTo(2);
+        assertThat(tags.getFirst()).isEqualTo("tag1");
     }
 
     @Test
     void findTagByName_shouldReturnTagByName() {
-        List<String> tags = tagRepository.findTagByName("tag1");
+        String tag = tagRepository.findTagByName("tag2");
 
-        assertNotNull(tags);
-        assertEquals("tag1", tags.getFirst());
-    }
-
-    @Test
-    void findTagByName_shouldReturnEmptyListIfTagDoesNotExist() {
-        List<String> tags = tagRepository.findTagByName("tag10");
-
-        assertNotNull(tags);
-        assertEquals(0, tags.size());
+        assertThat(tag).isNotNull();
     }
 
     @Test
     void findTagIdsByNames_shouldReturnTagIdsByNames() {
         List<Long> tagIds = tagRepository.findTagIdsByNames(List.of("tag1", "tag2"));
 
-        assertNotNull(tagIds);
-        assertEquals(2, tagIds.size());
-        assertEquals(1L, tagIds.get(0));
-        assertEquals(2L, tagIds.get(1));
+        assertThat(tagIds).isNotEmpty();
+        assertThat(tagIds.size()).isEqualTo(2);
+        assertThat(tagIds.get(0)).isEqualTo(1L);
+        assertThat(tagIds.get(1)).isEqualTo(2L);
     }
 
     @Test
-    void save_shouldSaveTag() {
-        tagRepository.save("tag4");
-
-        List<String> savedTag = tagRepository.findTagByName("tag4");
-
-        assertNotNull(savedTag);
-        assertEquals(1, savedTag.size());
-        assertEquals("tag4", savedTag.get(0));
-    }
-
-    @Test
-    void deleteTagsForPost_shouldDeleteAllLinksByPostId() {
+    void deleteTagsForPost_shouldDeleteTagLinksForPostId() {
         tagRepository.deleteTagsForPost(1L);
 
-        List<String> result = tagRepository.findAllTagsByPostId(1L);
-        assertNotNull(result);
-        assertEquals(0, result.size());
+        List<String> tagsForPost = tagRepository.findAllTagsByPostId(1L);
+        String tag = tagRepository.findTagByName("tag1");
+
+        assertThat(tagsForPost).isEmpty();
+        assertThat(tag).isNotNull();
+        assertThat(tag).isEqualTo("tag1");
     }
 
     @Test
-    void attachTags_shouldCreateLinksBetweenTagIdAndPostId() {
-        tagRepository.attachTags(2L, List.of(2L, 3L));
+    void attachTags_shouldCreatePostTagLink() {
+        tagRepository.attachTag(1L, 3L);
 
-        List<String> result = tagRepository.findAllTagsByPostId(2L);
-        assertNotNull(result);
-        assertEquals(2, result.size());
+        List<String> tagsForPost = tagRepository.findAllTagsByPostId(1L);
+        assertThat(tagsForPost).isNotEmpty();
+        assertThat(tagsForPost.size()).isEqualTo(3);
     }
 }

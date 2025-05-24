@@ -5,7 +5,7 @@
 </head>
 <body>
     <h1>Создать новый пост</h1>
-    <form th:action="@{/post/new}" th:object="${post}" method="post">
+    <form th:action="@{/post/new}" th:object="${post}" method="post" enctype="multipart/form-data">
         <div>
             <label for="title">Заголовок:</label>
             <input type="text" id="title" th:field="*{title}" required="required"/>
@@ -23,9 +23,13 @@
             <input type="text" id="tags" name="tags" th:field="*{tags}"/>
         </div>
         <div>
+            <label>Картинка:</label>
+            <input type="file" id="image" name="image"/>
+        </div>
+        <div>
             <button type="submit">Создать</button>
         </div>
     </form>
-    <a href="/MyPersonalBlog/feed">Назад к ленте</a>
+    <a href="/feed">Назад к ленте</a>
 </body>
 </html>

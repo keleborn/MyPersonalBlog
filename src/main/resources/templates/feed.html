@@ -6,7 +6,7 @@
 
 <body>
     <h1>Лента постов</h1>
-    <form method="get" action="/MyPersonalBlog/feed">
+    <form method="get" action="/feed">
         <select name="limit">
             <option value="5" th:selected="${limit == 5}">5</option>
             <option value="10" th:selected="${limit == 10}">10</option>
@@ -16,7 +16,7 @@
         <input type="hidden" name="tags" th:value="${selectedTags}">
         <button type="submit">Показать</button>
     </form>
-    <form method="get" action="/MyPersonalBlog/feed">
+    <form method="get" action="/feed">
         <label for="tags">Тег фильтр</label>
         <input type="text" name="tags" id="tags" th:value="${selectedTags}">
 
@@ -43,7 +43,7 @@
             </li>
         </ul>
     </div>
-    <a href="/MyPersonalBlog/post/new">
+    <a href="/post/new">
         <button>Создать новый пост</button>
     </a>
 </body>

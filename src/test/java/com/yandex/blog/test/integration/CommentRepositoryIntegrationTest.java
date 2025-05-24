@@ -1,99 +1,86 @@
 package com.yandex.blog.test.integration;
 
-import com.yandex.blog.configuration.DataSourceConfiguration;
 import com.yandex.blog.model.Comment;
-import com.yandex.blog.model.Post;
 import com.yandex.blog.repository.CommentRepository;
-import com.yandex.blog.repository.JdbcNativeCommentRepository;
-import com.yandex.blog.repository.JdbcNativePostRepository;
-import com.yandex.blog.repository.PostRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringJUnitConfig(classes = {DataSourceConfiguration.class, JdbcNativeCommentRepository.class})
-@TestPropertySource(locations = "classpath:test-application.properties")
-public class CommentRepositoryIntegrationTest {
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+public class CommentRepositoryIntegrationTest extends AbstractRepositoryIntegrationTest {
 
     @Autowired
     private CommentRepository commentRepository;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @BeforeEach
     public void setUp() {
-        jdbcTemplate.execute("DELETE FROM comments");
-        jdbcTemplate.execute("alter table comments alter column id restart with 1");
         jdbcTemplate.execute("insert into comments(post_id, content) values (1, 'Comment1')");
         jdbcTemplate.execute("insert into comments(post_id, content) values (1, 'Comment2')");
         jdbcTemplate.execute("insert into comments(post_id, content) values (2, 'Comment1')");
     }
 
     @Test
-    void getCommentsByPostId_shouldReturnAllCommentsByPostId() {
-        List<Comment> comments = commentRepository.getCommentsByPostId(1L);
+    void findByPostId_shouldReturnCommentsByPostId() {
+        List<Comment> comments = commentRepository.findByPostId(1L);
 
-        assertNotNull(comments);
-        assertEquals(2, comments.size());
-        assertEquals("Comment1", comments.get(0).getContent());
-        assertEquals("Comment2", comments.get(1).getContent());
+        assertThat(comments).isNotEmpty();
+        assertThat(comments.size()).isEqualTo(2);
+        assertThat(comments.get(0).getContent()).isEqualTo("Comment1");
+        assertThat(comments.get(1).getContent()).isEqualTo("Comment2");
     }
 
     @Test
     void deleteAllCommentsByPostId_shouldDeleteAllCommentsByPostId() {
         commentRepository.deleteAllCommentsByPostId(1L);
 
-        List<Comment> comments = commentRepository.getCommentsByPostId(1L);
+        List<Comment> comments = commentRepository.findByPostId(1L);
 
-        assertNotNull(comments);
-        assertEquals(0, comments.size());
+        assertThat(comments).isEmpty();
     }
 
     @Test
     void deleteCommentById_shouldDeleteCommentById() {
         commentRepository.deleteCommentById(1L);
 
-        List<Comment> comments = commentRepository.getCommentsByPostId(1L);
+        List<Comment> comments = commentRepository.findByPostId(1L);
+        Optional<Comment> comment = commentRepository.findById(1L);
 
-        assertNotNull(comments);
-        assertEquals(1, comments.size());
+        assertThat(comment).isNotPresent();
+        assertThat(comments).isNotEmpty();
+        assertThat(comments.size()).isEqualTo(1);
     }
 
     @Test
-    void saveComment_shouldSaveComment() {
+    void save_shouldSaveComment() {
         Comment comment = new Comment(null, 2L, "New comment");
-        commentRepository.saveComment(comment);
+        Comment savedComment = commentRepository.save(comment);
 
-        List<Comment> comments = commentRepository.getCommentsByPostId(2L);
-
-        assertNotNull(comments);
-        assertEquals(2, comments.size());
+        assertThat(savedComment).isNotNull();
+        assertThat(savedComment.getId()).isEqualTo(4L);
     }
 
     @Test
     void updateComment_shouldUpdateComment() {
-        Comment comment = new Comment(1L, 1L, "Updated comment");
-        commentRepository.updateComment(comment);
+        commentRepository.updateContentById(1L, "updated");
 
-        List<Comment> updateComments = commentRepository.getCommentsByPostId(1L);
+        Optional<Comment> comment = commentRepository.findById(1L);
 
-        assertNotNull(updateComments);
-        assertEquals(comment.getContent(), updateComments.getFirst().getContent());
+        assertThat(comment).isPresent();
+        assertThat(comment.get().getContent()).isEqualTo("updated");
     }
 
     @Test
     void countByPostId_shouldReturnCountByPostId() {
         int count = commentRepository.countByPostId(1L);
 
-        assertEquals(2, count);
+        assertThat(count).isEqualTo(2);
     }
 }

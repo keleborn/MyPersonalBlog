@@ -12,17 +12,24 @@ document.addEventListener('DOMContentLoaded', function () {
             for (const [key, value] of rawData.entries()) {
                 formData.append(key, value.toString());
             }
-            const response = await fetch('/MyPersonalBlog/post/comments', {
+            const response = await fetch('/post/comments', {
                 method: 'POST',
                 body: formData
             });
             if (response.ok) {
                 const text = formData.get("content")?.toString();
                 if (typeof text === "string") {
+                    const commentId = await response.text();
+
                     const li = document.createElement("li");
-                    li.innerText = text;
+                    li.setAttribute("data-id", commentId);
+                    li.innerHTML = `<span class`
+                    li.innerHTML = `<span class="comment-content">${text}</span><button class="edit-btn" type="button">Редактировать</button><button class="delete-btn" type="button">Удалить</button>`;
                     list.appendChild(li);
-                    form.reset()
+                    form.reset();
+
+                    attachEditListeners();
+                    attachDeleteListeners()
                 }
             }
         });
